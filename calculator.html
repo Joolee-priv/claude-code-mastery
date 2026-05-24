@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>계산기</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #1a1a2e;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .calculator {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      width: 320px;
+    }
+
+    .display {
+      background: #0f3460;
+      border-radius: 12px;
+      padding: 20px 16px 12px;
+      margin-bottom: 20px;
+      text-align: right;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .display .expression {
+      color: #a0aec0;
+      font-size: 14px;
+      min-height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .display .current {
+      color: #e2e8f0;
+      font-size: 36px;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 18px 0;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.1s;
+      font-weight: 500;
+    }
+
+    button:active { transform: scale(0.94); opacity: 0.8; }
+
+    .btn-number {
+      background: #1a1a4e;
+      color: #e2e8f0;
+    }
+
+    .btn-number:hover { background: #252565; }
+
+    .btn-operator {
+      background: #0f3460;
+      color: #63b3ed;
+    }
+
+    .btn-operator:hover { background: #1a4a80; }
+
+    .btn-operator.active { background: #63b3ed; color: #0f3460; }
+
+    .btn-action {
+      background: #2d3748;
+      color: #a0aec0;
+    }
+
+    .btn-action:hover { background: #3d4a5c; }
+
+    .btn-equals {
+      background: #e94560;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .btn-equals:hover { background: #ff5577; }
+
+    .btn-zero {
+      grid-column: span 2;
+      text-align: left;
+      padding-left: 24px;
+    }
+  </style>
+</head>
+<body>
+<div class="calculator">
+  <div class="display">
+    <div class="expression" id="expression"></div>
+    <div class="current" id="current">0</div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn-action" onclick="handleAction('clear')">AC</button>
+    <button class="btn-action" onclick="handleAction('sign')">+/-</button>
+    <button class="btn-action" onclick="handleAction('percent')">%</button>
+    <button class="btn-operator" onclick="handleOperator('/')">÷</button>
+
+    <button class="btn-number" onclick="handleNumber('7')">7</button>
+    <button class="btn-number" onclick="handleNumber('8')">8</button>
+    <button class="btn-number" onclick="handleNumber('9')">9</button>
+    <button class="btn-operator" onclick="handleOperator('*')">×</button>
+
+    <button class="btn-number" onclick="handleNumber('4')">4</button>
+    <button class="btn-number" onclick="handleNumber('5')">5</button>
+    <button class="btn-number" onclick="handleNumber('6')">6</button>
+    <button class="btn-operator" onclick="handleOperator('-')">−</button>
+
+    <button class="btn-number" onclick="handleNumber('1')">1</button>
+    <button class="btn-number" onclick="handleNumber('2')">2</button>
+    <button class="btn-number" onclick="handleNumber('3')">3</button>
+    <button class="btn-operator" onclick="handleOperator('+')">+</button>
+
+    <button class="btn-number btn-zero" onclick="handleNumber('0')">0</button>
+    <button class="btn-number" onclick="handleNumber('.')">.</button>
+    <button class="btn-equals" onclick="handleEquals()">=</button>
+  </div>
+</div>
+
+<script>
+  let currentInput = '0';
+  let previousInput = '';
+  let operator = null;
+  let shouldResetDisplay = false;
+
+  const currentEl = document.getElementById('current');
+  const expressionEl = document.getElementById('expression');
+
+  function updateDisplay() {
+    currentEl.textContent = currentInput;
+  }
+
+  function handleNumber(num) {
+    if (shouldResetDisplay) {
+      currentInput = '';
+      shouldResetDisplay = false;
+    }
+    if (num === '.' && currentInput.includes('.')) return;
+    if (currentInput === '0' && num !== '.') {
+      currentInput = num;
+    } else {
+      currentInput += num;
+    }
+    updateDisplay();
+  }
+
+  function handleOperator(op) {
+    if (operator && !shouldResetDisplay) {
+      handleEquals();
+    }
+    previousInput = currentInput;
+    operator = op;
+    shouldResetDisplay = true;
+
+    const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+    expressionEl.textContent = `${previousInput} ${opSymbols[op]}`;
+
+    document.querySelectorAll('.btn-operator').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function handleAction(action) {
+    if (action === 'clear') {
+      currentInput = '0';
+      previousInput = '';
+      operator = null;
+      shouldResetDisplay = false;
+      expressionEl.textContent = '';
+      document.querySelectorAll('.btn-operator').forEach(btn => btn.classList.remove('active'));
+    } else if (action === 'sign') {
+      currentInput = String(parseFloat(currentInput) * -1);
+    } else if (action === 'percent') {
+      currentInput = String(parseFloat(currentInput) / 100);
+    }
+    updateDisplay();
+  }
+
+  function handleEquals() {
+    if (!operator || !previousInput) return;
+
+    // TODO(human): 두 숫자(previousInput, currentInput)와 operator를 받아
+    // 실제 사칙연산 결과를 반환하는 calculate(a, op, b) 함수를 구현하세요.
+    // 반환값은 숫자(number)여야 합니다.
+
+    const result = calculate(parseFloat(previousInput), operator, parseFloat(currentInput));
+
+    expressionEl.textContent = `${previousInput} ${operator} ${currentInput} =`;
+    currentInput = String(result);
+    operator = null;
+    previousInput = '';
+    shouldResetDisplay = true;
+    document.querySelectorAll('.btn-operator').forEach(btn => btn.classList.remove('active'));
+    updateDisplay();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+    else if (e.key === '.') handleNumber('.');
+    else if (['+', '-', '*', '/'].includes(e.key)) handleOperator(e.key);
+    else if (e.key === 'Enter' || e.key === '=') handleEquals();
+    else if (e.key === 'Escape') handleAction('clear');
+    else if (e.key === 'Backspace') {
+      currentInput = currentInput.length > 1 ? currentInput.slice(0, -1) : '0';
+      updateDisplay();
+    }
+  });
+</script>
+</body>
+</html>
